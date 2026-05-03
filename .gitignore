@@ -9,6 +9,12 @@ __pycache__/
 ipark-bestin-register-state.json
 *-register-state.json
 
+# Private research notes and source links
+PRIVATE_NOTES.md
+private/
+notes/private/
+*.private.md
+
 # Home Assistant secrets/storage should never be committed
 homeassistant-config/.storage/
 .storage/
