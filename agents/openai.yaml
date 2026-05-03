@@ -1,0 +1,4 @@
+interface:
+  display_name: "IPARK BESTIN Register"
+  short_description: "Register IPARK/BESTIN wallpad mobile access for Home Assistant."
+  default_prompt: "Register my IPARK/BESTIN apartment with AI Assist and give Home Assistant and Google Home next steps."
