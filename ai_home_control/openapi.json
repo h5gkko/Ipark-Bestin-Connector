@@ -1,0 +1,361 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AI Home Control Bridge",
+    "description": "Control allowlisted Home Assistant BESTIN devices through a local bridge.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8787"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BridgeBearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {}
+  },
+  "security": [
+    {
+      "BridgeBearerAuth": []
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getBridgeHealth",
+        "summary": "Check bridge health",
+        "description": "Checks whether the Home Assistant bridge is reachable and configured.",
+        "x-openai-isConsequential": false,
+        "responses": {
+          "200": {
+            "description": "Bridge health response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "hass_url": {
+                          "type": "string"
+                        },
+                        "token_configured": {
+                          "type": "boolean"
+                        },
+                        "bridge_auth_required": {
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/light": {
+      "post": {
+        "operationId": "turnLight",
+        "summary": "Turn a light on or off",
+        "description": "Turns one allowlisted Home Assistant BESTIN light on or off. This is a non-consequential lighting action.",
+        "x-openai-isConsequential": false,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "state"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Light friendly name.",
+                    "enum": [
+                      "거실",
+                      "복도",
+                      "싱크대",
+                      "작은불",
+                      "식탁",
+                      "안방",
+                      "서재",
+                      "작은방"
+                    ]
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "Requested light state.",
+                    "enum": [
+                      "on",
+                      "off"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Light action result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "entity_id": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Light action error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/run": {
+      "post": {
+        "operationId": "runHomeAction",
+        "summary": "Run a home action",
+        "description": "Runs one allowlisted non-light Home Assistant BESTIN action. Lighting uses the separate turnLight operation. Ask for explicit confirmation before using this operation.",
+        "x-openai-isConsequential": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action"
+                ],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "description": "The allowlisted action to run.",
+                    "enum": [
+                      "list_devices",
+                      "set_heating_temperature",
+                      "turn_heating",
+                      "turn_electric",
+                      "set_ventilation",
+                      "close_gas_valve",
+                      "call_elevator_down",
+                      "get_elevator_status",
+                      "get_state"
+                    ]
+                  },
+                  "params": {
+                    "type": "object",
+                    "description": "Action parameters. Use confirm=true for close_gas_valve and call_elevator_down.",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Device or entity friendly name, such as 거실, 안방, 환풍기, or Electric 1 1."
+                      },
+                      "state": {
+                        "type": "string",
+                        "description": "Requested state, usually on or off."
+                      },
+                      "temperature": {
+                        "type": "number",
+                        "description": "Heating target temperature in Celsius."
+                      },
+                      "confirm": {
+                        "type": "boolean",
+                        "description": "Must be true for consequential actions such as elevator calls or gas valve closing."
+                      },
+                      "entity_id": {
+                        "type": "string",
+                        "description": "Home Assistant entity id for get_state."
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Action result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "entity_id": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string"
+                        },
+                        "floor": {
+                          "type": "string"
+                        },
+                        "direction": {
+                          "type": "string"
+                        },
+                        "devices": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "entity_id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "domain": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string"
+                              }
+                            },
+                            "additionalProperties": true
+                          }
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Action error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
