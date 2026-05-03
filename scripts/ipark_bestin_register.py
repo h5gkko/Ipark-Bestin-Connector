@@ -34,7 +34,7 @@ def normalize_identifier(value: str | None, dong: str | None, ho: str | None) ->
             left, right = compact.split("/", 1)
             if left.isdigit() and right.isdigit():
                 return f"{int(left)}/{int(right)}"
-        raise BestinError("동/호는 117/401 같은 형식이어야 합니다.")
+        raise BestinError("동/호는 101/1203 같은 형식이어야 합니다.")
 
     if not dong or not ho:
         raise BestinError("--identifier 또는 --dong/--ho를 입력해야 합니다.")
@@ -237,7 +237,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("register", help="Send wallpad registration request")
     p.add_argument("--site-code", required=True)
-    p.add_argument("--identifier", help="Building/unit, for example 117/401")
+    p.add_argument("--identifier", help="Building/unit, for example 101/1203")
     p.add_argument("--dong")
     p.add_argument("--ho")
     p.add_argument("--uuid", help="Use an existing UUID; generated if omitted")
